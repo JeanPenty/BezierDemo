@@ -22,16 +22,16 @@ public:
 protected:
 	void OnPaint(IRenderTarget* pRT);
 
-// 	void OnLButtonDown(UINT nFlags, SOUI::CPoint point);
-// 	void OnLButtonUp(UINT nFlags, SOUI::CPoint point);
-// 	void OnMouseMove(UINT nFlags, SOUI::CPoint point);
+	void OnLButtonDown(UINT nFlags, SOUI::CPoint point);
+	void OnLButtonUp(UINT nFlags, SOUI::CPoint point);
+	void OnMouseMove(UINT nFlags, SOUI::CPoint point);
 	LRESULT OnMouseEvent(UINT uMsg, WPARAM wParam, LPARAM lParam);
 protected:
 	SOUI_MSG_MAP_BEGIN()
 		MSG_WM_PAINT_EX(OnPaint)
-// 		MSG_WM_LBUTTONDOWN(OnLButtonDown)
-// 		MSG_WM_LBUTTONUP(OnLButtonUp)
-// 		MSG_WM_MOUSEMOVE(OnMouseMove)
+		MSG_WM_LBUTTONDOWN(OnLButtonDown)
+		MSG_WM_LBUTTONUP(OnLButtonUp)
+		MSG_WM_MOUSEMOVE(OnMouseMove)
 
 		MESSAGE_RANGE_HANDLER_EX(WM_MOUSEFIRST, WM_MOUSELAST, OnMouseEvent)
 		SOUI_MSG_MAP_END()

@@ -21,50 +21,50 @@ CBezierCtrl::~CBezierCtrl()
 	//
 }
 
-// void CBezierCtrl::OnLButtonDown(UINT nFlags, SOUI::CPoint point)
-// {
-// 	m_bDraw = true;
-// }
-// 
-// void CBezierCtrl::OnLButtonUp(UINT nFlags, SOUI::CPoint point)
-// {
-// 	m_bDraw = false;
-// 	m_vecBezierPath.clear();
-// 	if (m_vecSrcPts.size() > 4)
+void CBezierCtrl::OnLButtonDown(UINT nFlags, SOUI::CPoint point)
+{
+	m_bDraw = true;
+}
+
+void CBezierCtrl::OnLButtonUp(UINT nFlags, SOUI::CPoint point)
+{
+	m_bDraw = false;
+	m_vecBezierPath.clear();
+	if (m_vecSrcPts.size() > 4)
+	{
+		return;
+	}
+	m_vecSrcPts.push_back(point);
+
+	vector<Point> points;
+	for (int i = 0; i < m_vecSrcPts.size(); i++)
+	{
+		Point pt(m_vecSrcPts[i].x, m_vecSrcPts[i].y);
+		points.push_back(pt);
+	}
+
+	if (m_vecSrcPts.size() > 1)
+	{
+		const float step = 0.02; // 步长
+		for (float t = 0; t <= 1; t += step)
+		{
+			Point p = bezier_curve(points, t);
+			m_vecBezierPath.push_back(p);
+		}
+
+		Invalidate();
+	}
+
+}
+
+void CBezierCtrl::OnMouseMove(UINT nFlags, SOUI::CPoint point)
+{
+// 	if (m_bDraw)
 // 	{
-// 		return;
-// 	}
-// 	m_vecSrcPts.push_back(point);
-// 
-// 	vector<Point> points;
-// 	for (int i = 0; i < m_vecSrcPts.size(); i++)
-// 	{
-// 		Point pt(m_vecSrcPts[i].x, m_vecSrcPts[i].y);
-// 		points.push_back(pt);
-// 	}
-// 
-// 	if (m_vecSrcPts.size() > 1)
-// 	{
-// 		const float step = 0.02; // 步长
-// 		for (float t = 0; t <= 1; t += step)
-// 		{
-// 			Point p = bezier_curve(points, t);
-// 			m_vecBezierPath.push_back(p);
-// 		}
-// 
+// 		m_vecSrcPts.push_back(point);
 // 		Invalidate();
 // 	}
-// 
-// }
-// 
-// void CBezierCtrl::OnMouseMove(UINT nFlags, SOUI::CPoint point)
-// {
-// // 	if (m_bDraw)
-// // 	{
-// // 		m_vecSrcPts.push_back(point);
-// // 		Invalidate();
-// // 	}
-// }
+}
 
 LRESULT CBezierCtrl::OnMouseEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
