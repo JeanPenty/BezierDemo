@@ -4,8 +4,11 @@
 #include <cmath>
 #include <iostream>
 #include <fstream>
-
 using namespace std;
+
+#include <cmath>
+
+#define M_PI 3.1415926
 
 class CBezierCtrl : public SWindow
 {
@@ -43,6 +46,9 @@ protected:
 private:
 	int binomial(int n, int i);
 	Point bezier_curve(const vector<Point>& points, float t);
+
+	void RotatePoint(CPoint& pt, CPoint& ptBase, double dDegree);
+	CPoint getTriangleVertex(CPoint& pt1, CPoint& pt2);
 
 	std::vector<Point> m_vecBezierPath;
 	//存储历史曲线路劲
