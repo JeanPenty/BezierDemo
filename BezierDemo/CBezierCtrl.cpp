@@ -4,16 +4,8 @@
 
 CBezierCtrl::CBezierCtrl()
 {
-// 	vector<Point> points = { {100,100}, {200, 400},{400,400},{500,100}}; // 贝塞尔曲线控制点，给定控制点的数量决定贝塞尔曲线的阶数
-// 
-// 	const float step = 0.02; // 步长
-// 	for (float t = 0; t <= 1; t += step)
-// 	{
-// 		Point p = bezier_curve(points, t);
-// 		m_vecBezierPath.push_back(p);
-// 	}
-
 	m_bDraw = false;
+	m_bFirstDown = true;
 }
 
 CBezierCtrl::~CBezierCtrl()
@@ -23,47 +15,108 @@ CBezierCtrl::~CBezierCtrl()
 
 void CBezierCtrl::OnLButtonDown(UINT nFlags, SOUI::CPoint point)
 {
-	m_bDraw = true;
+	if (m_bFirstDown)
+	{
+		m_bDraw = true;
+		m_bFirstDown = false;
+		m_ptBezierStart = point;
+	}
+	else
+	{
+		m_bDraw = false;
+		m_bFirstDown = true;
+	}
 }
 
 void CBezierCtrl::OnLButtonUp(UINT nFlags, SOUI::CPoint point)
 {
-	m_bDraw = false;
-	m_vecBezierPath.clear();
-	if (m_vecSrcPts.size() > 4)
+	//移动完成第二次鼠标左键up
+	if (m_bFirstDown)
 	{
-		return;
-	}
-	m_vecSrcPts.push_back(point);
+		m_bDraw = false;
+		std::vector<Point> vecBezierPath;
+		//组织三阶贝塞尔曲线的四个点
+		std::vector<CPoint> vecPts;
+		//第一个点
+		vecPts.push_back(m_ptBezierStart);
+		//第二个点
+		CPoint pt2;
+		pt2.x = m_ptBezierStart.x;
+		pt2.y = point.y;
+		vecPts.push_back(pt2);
+		//第三个点
+		CPoint pt3;
+		pt3.x = point.x;
+		pt3.y = m_ptBezierStart.y;
+		vecPts.push_back(pt3);
+		//第四个点
+		vecPts.push_back(point);
 
-	vector<Point> points;
-	for (int i = 0; i < m_vecSrcPts.size(); i++)
-	{
-		Point pt(m_vecSrcPts[i].x, m_vecSrcPts[i].y);
-		points.push_back(pt);
-	}
-
-	if (m_vecSrcPts.size() > 1)
-	{
-		const float step = 0.02; // 步长
-		for (float t = 0; t <= 1; t += step)
+		vector<Point> points;
+		for (int i = 0; i < vecPts.size(); i++)
 		{
-			Point p = bezier_curve(points, t);
-			m_vecBezierPath.push_back(p);
+			Point pt(vecPts[i].x, vecPts[i].y);
+			points.push_back(pt);
+		}
+		if (vecPts.size() > 1)
+		{
+			//计算曲线轨迹
+			const float step = 0.02; // 步长
+			for (float t = 0; t <= 1; t += step)
+			{
+				Point p = bezier_curve(points, t);
+				vecBezierPath.push_back(p);
+			}
 		}
 
+		m_vecBezierPaths.push_back(vecBezierPath);
 		Invalidate();
 	}
-
 }
 
 void CBezierCtrl::OnMouseMove(UINT nFlags, SOUI::CPoint point)
 {
-// 	if (m_bDraw)
-// 	{
-// 		m_vecSrcPts.push_back(point);
-// 		Invalidate();
-// 	}
+	if (m_bDraw)
+	{
+		m_vecBezierPath.clear();
+
+		//组织三阶贝塞尔曲线的四个点
+		std::vector<CPoint> vecPts;
+
+		//第一个点
+		vecPts.push_back(m_ptBezierStart);
+		//第二个点
+		CPoint pt2;
+		pt2.x = m_ptBezierStart.x;
+		pt2.y = point.y;
+		vecPts.push_back(pt2);
+		//第三个点
+		CPoint pt3;
+		pt3.x = point.x;
+		pt3.y = m_ptBezierStart.y;
+		vecPts.push_back(pt3);
+		//第四个点
+		vecPts.push_back(point);
+
+
+		vector<Point> points;
+		for (int i = 0; i < vecPts.size(); i++)
+		{
+			Point pt(vecPts[i].x, vecPts[i].y);
+			points.push_back(pt);
+		}
+		if (vecPts.size() > 1)
+		{
+			//计算曲线轨迹
+			const float step = 0.02; // 步长
+			for (float t = 0; t <= 1; t += step)
+			{
+				Point p = bezier_curve(points, t);
+				m_vecBezierPath.push_back(p);
+			}
+		}
+		Invalidate();
+	}
 }
 
 LRESULT CBezierCtrl::OnMouseEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -76,7 +129,6 @@ LRESULT CBezierCtrl::OnMouseEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	}
 	else if (uMsg == WM_LBUTTONDOWN)
 	{
-		//插入一个点
 	}
 
 	return 0;
@@ -91,31 +143,51 @@ void CBezierCtrl::OnPaint(IRenderTarget* pRT)
 	pRT->CreatePen(PS_SOLID, RGBA(0, 0, 0, 255), 2, &pen);
 	pRT->SelectObject(pen, (IRenderObj**)&oldpen);
 
-	CAutoRefPtr<IPath> path;
-	GETRENDERFACTORY->CreatePath(&path);
-
 	SAutoRefPtr<ICornerPathEffect> pathEffect;
 	GETRENDERFACTORY->CreatePathEffect(__uuidof(ICornerPathEffect), (IPathEffect**)&pathEffect);
 	if (pathEffect)
 		pathEffect->Init(5.0);
 
-	std::vector<POINT> vecPoly;
-	for (int i = 0; i < m_vecBezierPath.size(); i++)
+	//先绘制历史曲线
+	for (int i = 0; i < m_vecBezierPaths.size(); i++)
 	{
-		POINT pt; 
-		pt.x = m_vecBezierPath[i].x;
-		pt.y = m_vecBezierPath[i].y;
-		vecPoly.push_back(pt);
+		std::vector<Point>& bezierPath = m_vecBezierPaths[i];
+		CAutoRefPtr<IPath> path;
+		GETRENDERFACTORY->CreatePath(&path);
+
+		std::vector<POINT> vecPoly;
+		for (int i = 0; i < bezierPath.size(); i++)
+		{
+			POINT pt;
+			pt.x = bezierPath[i].x;
+			pt.y = bezierPath[i].y;
+			vecPoly.push_back(pt);
+		}
+		if (vecPoly.size() > 0)
+			path->addPoly(&vecPoly[0], vecPoly.size(), false);
+
+		pRT->DrawPath(path, pathEffect);
 	}
 
-	if (vecPoly.size() > 0)
+	//绘制鼠标移动时产生的临时曲线
+	if (m_bDraw)
 	{
-		path->addPoly(&vecPoly[0], vecPoly.size(), false);
-	}
-	
-	pRT->DrawPath(path, pathEffect);
-	//pRT->DrawLines(&vecPoly[0], vecPoly.size());
+		CAutoRefPtr<IPath> path;
+		GETRENDERFACTORY->CreatePath(&path);
+		std::vector<POINT> vecPoly;
+		for (int i = 0; i < m_vecBezierPath.size(); i++)
+		{
+			POINT pt;
+			pt.x = m_vecBezierPath[i].x;
+			pt.y = m_vecBezierPath[i].y;
+			vecPoly.push_back(pt);
+		}
 
+		if (vecPoly.size() > 0)
+			path->addPoly(&vecPoly[0], vecPoly.size(), false);
+
+		pRT->DrawPath(path, pathEffect);
+	}
 	pRT->SelectObject(oldpen, NULL);
 
 	SWindow::OnPaint(pRT);
@@ -125,7 +197,7 @@ void CBezierCtrl::OnPaint(IRenderTarget* pRT)
 int CBezierCtrl::binomial(int n, int i) {
 	int res = 1;
 	for (int j = 1; j <= i; ++j) {
-		res *= (n - j + 1) / (double)j; //(double)十分关键，不然j=i=n时，j为分数=0；
+		res *= (n - j + 1) / (double)j;
 	}
 	return res;
 }
@@ -135,12 +207,9 @@ CBezierCtrl::Point CBezierCtrl::bezier_curve(const vector<CBezierCtrl::Point>& p
 	int n = points.size() - 1;
 	CBezierCtrl::Point res;
 	for (int i = 0; i <= n; ++i) {
-		//cout << "p:" << points[i].x << "," << points[i].y << endl;
 		float b = binomial(n, i) * pow(t, i) * pow(1 - t, n - i);
-		//cout << "bino=" << binomial(n, i) << endl;
 		res.x = res.x + points[i].x * b;
 		res.y = res.y + points[i].y * b;
-		//res.z = res.z + points[i].z * b;
 	}
 	return res;
 }

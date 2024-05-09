@@ -33,7 +33,7 @@ protected:
 		MSG_WM_LBUTTONUP(OnLButtonUp)
 		MSG_WM_MOUSEMOVE(OnMouseMove)
 
-		MESSAGE_RANGE_HANDLER_EX(WM_MOUSEFIRST, WM_MOUSELAST, OnMouseEvent)
+		//MESSAGE_RANGE_HANDLER_EX(WM_MOUSEFIRST, WM_MOUSELAST, OnMouseEvent)
 		SOUI_MSG_MAP_END()
 
 		SOUI_ATTRS_BEGIN()
@@ -44,12 +44,14 @@ private:
 	int binomial(int n, int i);
 	Point bezier_curve(const vector<Point>& points, float t);
 
-
-	std::vector<CPoint> m_vecSrcPts;
 	std::vector<Point> m_vecBezierPath;
-
+	//存储历史曲线路劲
+	std::vector<std::vector<Point>> m_vecBezierPaths;
 
 	bool m_bDraw;
+
+	CPoint m_ptBezierStart;
+	bool	m_bFirstDown;
 public:
 
 };
